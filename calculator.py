@@ -1,9 +1,9 @@
-from PyQt5.QtGui import QFont, QKeySequence
-from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QFont, QKeySequence, QCursor, QWindow
+from PyQt5.QtCore import Qt, QPoint
 from PyQt5.QtWidgets import (QApplication, QFileDialog, QHBoxLayout, QLabel, QMessageBox, 
-        QShortcut, QGridLayout, QPushButton,
+        QShortcut, QGridLayout, QPushButton, QTextEdit,
         QLineEdit, QSizePolicy, QSlider, QStyle, QVBoxLayout, QWidget, QStatusBar)
-from style_sheet import stylesheet
+from style_sheet import *
 
 class window(QWidget):
     def __init__(self, parent=None):
@@ -17,15 +17,26 @@ class window(QWidget):
     def init_ui(self):
         self.display = QLineEdit(self)
         self.display.setFixedWidth(160)
-        self.display.setAlignment(Qt.AlignRight)
+        self.display.setAlignment(Qt.AlignLeft)
         self.display.setFont(QFont('Arial', 32))
         self.display.setStyleSheet(stylesheet(self))
 
         self.answer = QLabel()
-        self.answer.setFixedSize(160, 24)
+        self.answer.setFixedSize(160,24)
         self.answer.setAlignment(Qt.AlignRight)
         self.answer.setFont(QFont('Arial', 16))
         self.answer.setStyleSheet(stylesheet(self))
+
+        
+        text = "Calculator"
+        self.title = QStatusBar()
+        self.title.showMessage(text)
+        #self.title.setWordWrap(True)
+        #self.title.setAlignment(Qt.Qt.AlignCenter)
+        self.title.setStyleSheet(stylesheet(self))
+
+        self.text_editor = QTextEdit()
+        self.text_editor.setStyleSheet(stylesheet(self))
     
     def init_numpad(self):
         self.push_0 = QPushButton("0")
@@ -145,8 +156,15 @@ class window(QWidget):
         self.push_s_d.setFixedSize(64, 24)
         self.push_s_d.setStyleSheet(stylesheet(self))
 
-
-
+        self.close_button = QPushButton("❌")
+        self.close_button.setFixedSize(24, 24)
+        self.close_button.setStyleSheet(stylesheet(self))
+        self.close_button.clicked.connect(self.close)
+        
+        self.minimize_button = QPushButton("━")
+        self.minimize_button.setFixedSize(24, 24)
+        self.minimize_button.setStyleSheet(stylesheet(self))
+        self.minimize_button.clicked.connect(self.minimize)
 
         # create a info
         self.myinfo = """
@@ -163,13 +181,36 @@ HotKeys:
     SHIFT+LEFT = < 10 Minutes
     SHIFT+RIGHT = > 10 Minutes"""
 
+    def minimize(self, event):
+            self.setWindowState(self.windowState() | QWindow.Minimized)
+        
+    def mousePressEvent(self, evt):
+        self.oldPos = evt.globalPos()
+    
+    def mouseMoveEvent(self, evt):
+        delta = QPoint(evt.globalPos() - self.oldPos)
+        self.move(self.x() + delta.x(), self.y() + delta.y())
+        self.oldPos = evt.globalPos()
+            
+    def closeEvent(self, event):
+            event.accept()
+
+
     def hot_keys(self):
         pass
 
     def init_layout(self):
-        # create layout_A
+
         self.layout_A = QHBoxLayout()
+        self.layout_A.setContentsMargins(0, 0, 0, 0)
         self.layout_A.setSpacing(0)
+        self.layout_A.addWidget(self.title)
+        self.layout_A.addWidget(self.minimize_button)
+        self.layout_A.addWidget(self.close_button)
+
+        # create layout_A
+        self.layout_B = QHBoxLayout()
+        self.layout_B.setSpacing(0)
         #self.layout_A.addWidget(self.open_button)
         #self.layout_A.addWidget(self.photo_tab)
         #self.layout_A.addWidget(self.video_tab)
@@ -222,7 +263,7 @@ HotKeys:
         self.layout.setSpacing(0)
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.layout.addLayout(self.layout_A)
-        #self.layout.addWidget(self.statusBar)
+        self.layout.addLayout(self.layout_B)
         self.layout.addWidget(self.display)
         self.layout.addWidget(self.answer)
         self.layout.addLayout(self.operator_2)
@@ -351,8 +392,9 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
     player = window()
     player.widescreen = True
+    player.setWindowFlags(Qt.FramelessWindowHint)
     player.setGeometry(100, 300, 160, 200)
-    player.setStyleSheet("background: #2b2b2b")
-    player.setWindowTitle("Calculator")
+    player.setStyleSheet("background: black; color: #e2222e")
+    player.setWindowOpacity(0.8)
     player.show()
     sys.exit(app.exec_())
